@@ -1,0 +1,399 @@
+---
+title: "Processing"
+---
+
+```{r setup, include=FALSE}
+
+# Do not echo code chunks in rendered document
+
+knitr::opts_chunk$set(echo = FALSE);
+
+# Do not render values returned by code in code chunks
+
+knitr::opts_chunk$set(results = "hide")
+
+# Clear the global environment
+
+rm(list = ls());
+
+# Create an environment to hold metadata to be transferred to later scripts
+
+metaEnv <- new.env();
+
+```
+
+<!-- Automatically populate a description of the compilation of this file. -->
+
+Generated from R markdown file **./02_Protocol/`r knitr::current_input()`**, last compiled on `r Sys.time()`
+
+```{r}
+
+# Make sure target directories exist.
+
+tempPath <- "./03_incremental/temp";
+dir.create(
+  path = tempPath,
+  recursive = TRUE,
+  showWarnings = FALSE
+);
+productPath <- "./04_product";
+dir.create(
+  path = productPath,
+  recursive = TRUE,
+  showWarnings = FALSE
+);
+
+```
+
+## EEMS reference table
+
+Create the table of references to the file names of the EEMS matrix files in the accompanying zip file.
+
+```{r}
+
+# Read the R data file with the vector of EEMS file names
+
+eemsFilenames <- readRDS(file = "./03_incremental/temp/eemsFilenames.RData");
+
+# Split the filenames into a matrix of metadata about the sample date,
+# site ID, and replicate ID
+
+eemsNamesMatrix <- sapply(
+  X = strsplit(
+    x = as.character(strsplit(x = eemsFilenames$new, split = ".csv$")), 
+    split = "_",
+    fixed = TRUE
+  ),
+  FUN = function(x) {
+    return( 
+      c(
+        x[1], 
+        substring(text = x[2], first = 2, last = nchar(x[2])), 
+        substring(text = x[3], first = 2, last = 2)
+      ) 
+    );
+  }
+);
+
+# Specify the table metadata
+
+metaEnv$tableEEMSFiles.name <- "EEMS_wy2018_Aqualog";
+
+metaEnv$tableEEMSFiles.desc <- paste(
+  "References to comma delimited text files with",
+  "analysis-ready excitation-emission matrices (EEMS)",
+  "from fluorometric analysis of dissolved organic carbon",
+  "sampled in triplicate along the Upper Clark Fork River." 
+);
+
+# Read the project attributes table
+# and restructure for convenience.
+
+atts <- as.data.frame(
+  t(as.matrix(
+    readxl::read_excel(
+      path = "./01_input/meta/attributes.xlsx",
+      sheet = "attributes",
+      range = readxl::cell_limits(ul = c(2, 3)),
+      col_names = TRUE,
+      col_types = rep("text", times = 10)
+    )
+  ))
+);
+names(atts) <- readxl::read_excel(
+  path = "./01_input/meta/attributes.xlsx",
+  sheet = "attributes",
+  range = readxl::cell_limits(ul = c(3, 2), lr = c(NA, 2)),
+  col_names = "rownames",
+  col_types = "text"
+)$rownames;
+atts[is.na(atts)] <- "";
+
+metaEnv$tableEEMSFiles.meta <- data.frame(
+  dateString = atts$date,
+  siteID = atts$siteID,
+  repID = atts$repID,
+  eemsFile = atts$eemsFileRef,
+  row.names = rownames(atts)
+);
+
+# Create the data frame that contains the table of references to EEMS
+# matrix files.
+
+eemsTable <- data.frame(
+  eemsNamesMatrix[1,],
+  eemsNamesMatrix[2,],
+  eemsNamesMatrix[3,],
+  sprintf(
+    "EEMS_wy2018_Aqualog.zip/%s",
+    eemsFilenames$new
+  )
+);
+colnames(eemsTable) <- names(metaEnv$tableEEMSFiles.meta);
+
+# Create a numerical dates to determine earliest and latest dates for metadata
+
+dates <- as.POSIXct(eemsTable$dateString, format = "%Y%m%d", tz = "UTC");
+metaEnv$startTime <- min(dates);
+metaEnv$endTime <- max(dates);
+
+metaEnv$sites <- sort(unique(eemsTable$siteID));
+
+```
+
+`r sprintf("**%s.csv**", metaEnv$tableEEMSFiles.name)`: `r metaEnv$tableEEMSFiles.desc`
+
+`r knitr::kable(x = metaEnv$tableEEMSFiles.meta) `
+
+```{r}
+
+# Write the data table to the product
+
+write.csv(
+  x = eemsTable,
+  file = sprintf(
+    "%s/%s.csv",
+    productPath,
+    metaEnv$tableEEMSFiles.name
+  ),
+  row.names = FALSE
+)
+
+```
+
+Data table written to `r sprintf("./%s.csv", metaEnv$tableEEMSFiles.name) `
+
+
+## Table to define wavelengths for EEMS excitations
+
+Create the table of column numbers and associated wavelengths
+
+```{r}
+
+ExMax <- 450;
+ExMin <- 250;
+ExRes <- 5;
+table <- data.frame(
+  colNum = 1:(((ExMax - ExMin) / ExRes) + 1),
+  ExWavelength = seq(from = ExMin, to = ExMax, by = ExRes)
+)
+
+# Specify the table metadata
+
+metaEnv$tableEEMSCols.name <- "EEMS_excitation_wavelengths";
+
+metaEnv$tableEEMSCols.desc <- 
+  "Wavelenths for excitation (columns left to right) in EEMS matrices";
+
+metaEnv$tableEEMSCols.meta <- data.frame(
+  colNum = atts$matrixColNum,
+  ExWavelength = atts$eemsExcitationWavelength,
+  row.names = rownames(atts)
+);
+
+```
+
+`r sprintf("**%s.csv**", metaEnv$tableEEMSCols.name)`: `r metaEnv$tableEEMSCols.desc`
+
+`r knitr::kable(x = metaEnv$tableEEMSCols.meta) `
+
+```{r}
+
+# Write the data table to the product
+
+write.csv(
+  x = table,
+  file = sprintf(
+    "%s/%s.csv",
+    productPath,
+    metaEnv$tableEEMSCols.name
+  ),
+  row.names = FALSE
+)
+
+```
+
+Data table written to `r sprintf("./%s.csv", metaEnv$tableEEMSCols.name) `
+
+
+## Table to define wavelengths for EEMS emissions
+
+Create the table of row numbers and associated wavelengths
+
+```{r}
+
+EmMax <- 560;
+EmMin <- 300;
+EmRes <- 2;
+table <- data.frame(
+  rowNum = 1:(((EmMax - EmMin) / EmRes) + 1),
+  EmWavelength = seq(from = EmMin, to = EmMax, by = EmRes)
+)
+
+# Specify the table metadata
+
+metaEnv$tableEEMSRows.name <- "EEMS_emission_wavelengths";
+
+metaEnv$tableEEMSRows.desc <- 
+  "Wavelenths for emissions (rows top to bottom) in EEMS matrices";
+
+metaEnv$tableEEMSRows.meta <- data.frame(
+  rowNum = atts$matrixRowNum,
+  EmWavelength = atts$eemsEmissionWavelength,
+  row.names = rownames(atts)
+);
+
+```
+
+`r sprintf("**%s.csv**", metaEnv$tableEEMSRows.name)`: `r metaEnv$tableEEMSRows.desc`
+
+`r knitr::kable(x = metaEnv$tableEEMSRows.meta) `
+
+```{r}
+
+# Write the data table to the product
+
+write.csv(
+  x = table,
+  file = sprintf(
+    "%s/%s.csv",
+    productPath,
+    metaEnv$tableEEMSRows.name
+  ),
+  row.names = FALSE
+)
+
+```
+
+Data table written to `r sprintf("./%s.csv", metaEnv$tableEEMSRows.name) `
+
+
+## Table of absorbances of all excitation wavelengths
+
+```{r}
+
+metaEnv$tableAbsorbance.name <- "Absorbance_wy2018_Aqualog";
+
+metaEnv$tableAbsorbance.desc <- paste(
+  "Absorbance for all excitation wavelengths from analysis",
+  "with an Aqualog multispectral fluorometer"
+);
+
+metaEnv$tableAbsorbance.meta <- data.frame(
+  dateString = atts$date,
+  siteID = atts$siteID,
+  repID = atts$repID,
+  wavelength = atts$eemsExcitationWavelength,
+  absorbance = atts$absorbance,
+  row.names = rownames(atts)
+);
+
+```
+
+`r sprintf("**%s.csv**", metaEnv$tableAbsorbance.name)`: `r metaEnv$tableAbsorbance.desc`
+
+`r knitr::kable(x = metaEnv$tableAbsorbance.meta) `
+
+
+## Table of summary absorbance and fluorescence metrics
+
+```{r}
+
+df <- read.table(
+  file = "./03_incremental/LTREB_OpticalProp_Aqualog_ WY_2018 _FINAL.txt",
+  sep = "\t",
+  header = TRUE
+);
+
+dates <- as.POSIXct(
+  df$DATE,
+  format = "%Y-%m-%d",
+  tz = "UTC"
+);
+metaEnv$startTime <- min(metaEnv$startTime, dates);
+metaEnv$endTime <- max(metaEnv$endTime, dates);
+
+df$dateString <- format(
+  x = dates,
+  format = "%Y%m%d"
+)
+
+df$siteID <- sprintf(
+  "%03d",
+  as.numeric(substr(df$SITE, 2, 3))
+)
+
+df$repID <- substr(df$REP, 2, 2);
+
+metaEnv$tableSummaryMetrics.name <- "Summary_metrics_wy2018";
+
+metaEnv$tableSummaryMetrics.desc <- paste(
+  "Summary metrics of absorbance and fluorescence including",
+  "the absorbace at 254nm, fluorescence index, and humification index"
+);
+
+metaEnv$tableSummaryMetrics.meta <- data.frame(
+  dateString = atts$date,
+  siteID = atts$siteID,
+  repID = atts$repID,
+  abs_254nm = atts$abs254,
+  FI = atts$fluorIndex,
+  HIX = atts$humificationIndex,
+  row.names = rownames(atts)
+);
+
+table <- df[names(metaEnv$tableSummaryMetrics.meta)]
+
+```
+
+`r sprintf("**%s.csv**", metaEnv$tableSummaryMetrics.name)`: `r metaEnv$tableSummaryMetrics.desc`
+
+`r knitr::kable(x = metaEnv$tableSummaryMetrics.meta) `
+
+```{r}
+
+# Write the data table to the product
+
+write.csv(
+  x = table,
+  file = sprintf(
+    "%s/%s.csv",
+    productPath,
+    metaEnv$tableSummaryMetrics.name
+  ),
+  row.names = FALSE
+)
+
+```
+
+
+## Write metdata object
+
+```{r}
+
+# Specify the path to the temporary metadata file and write
+# the metadata environment to it
+
+file <- sprintf(
+  "%s/metadata.RData",
+  tempPath
+);
+saveRDS(
+  object = metaEnv,
+  file = file
+)
+
+```
+
+Temporary metadata file written to `r file `
+
+
+## Summary of R session used to compile this Rmarkdown
+
+```{r results = "markup"}
+
+# Render the session information
+
+print(sessionInfo()) 
+
+```
