@@ -43,6 +43,11 @@ dir.create(
   showWarnings = FALSE
 );
 
+# Specify the range of scale for time axes on plots
+
+xmin <- as.POSIXct("2017-07-01");
+xmax <- as.POSIXct("2018-10-01");
+
 ```
 
 ## EEMS reference table
@@ -380,6 +385,136 @@ write.csv(
 
 ```
 
+## Visualization of summary absorbance and fluorescence metrics
+
+```{r plotSummary}
+
+pdf(
+  file = sprintf(
+    "%s/%s_vis.pdf", 
+    productPath,
+    metaEnv$tableSummaryMetrics.name
+  ),
+  width = 12,
+  height = 16
+);
+
+  # Set the canvas margins around the graphing area
+
+  par(
+    mfrow = c(3, 1),
+    mar = c(4.2, 4.2, 1, 1)
+  )
+  
+  # Plot the data with a monthly abscissa
+  
+  plot(
+    x = dates,
+    xlab = "Time",
+    xaxt = "n",
+    xlim = c(xmin, xmax),
+    y = table$abs_254nm,
+    ylab = bquote(
+      "Absorbance at 254 nm (fraction of excitation intensity)"
+    ),
+    col = 1:length(metaEnv$sites)
+  );
+  axis.POSIXct(
+    side = 1,
+    at = seq.POSIXt(
+      from = xmin,
+      to = xmax,
+      by = "months"
+    ),
+    format = "%Y %b"
+  )
+  
+  # Render the legend with the site colors
+  
+  legend(
+    x = "left",
+    bty = "n",
+    legend = metaEnv$sites,
+    pch = 1,
+    col = 1:length(metaEnv$sites),
+    title = "Site ID"
+  )
+
+  # Plot the data with a monthly abscissa
+  
+  plot(
+    x = dates,
+    xlab = "Time",
+    xaxt = "n",
+    xlim = c(xmin, xmax),
+    y = table$FI,
+    ylab = bquote(
+      "Fluorescence index (ratio of fluorescence intensities)"
+    ),
+    col = 1:length(metaEnv$sites)
+  );
+  axis.POSIXct(
+    side = 1,
+    at = seq.POSIXt(
+      from = xmin,
+      to = xmax,
+      by = "months"
+    ),
+    format = "%Y %b"
+  )
+  
+  # Render the legend with the site colors
+  
+  legend(
+    x = "left",
+    bty = "n",
+    legend = metaEnv$sites,
+    pch = 1,
+    col = 1:length(metaEnv$sites),
+    title = "Site ID"
+  )
+
+  # Plot the data with a monthly abscissa
+  
+  plot(
+    x = dates,
+    xlab = "Time",
+    xaxt = "n",
+    xlim = c(xmin, xmax),
+    y = table$HIX,
+    ylab = bquote(
+      "Humification index (ratio of fluorescence intensities)"
+    ),
+    col = 1:length(metaEnv$sites)
+  );
+  axis.POSIXct(
+    side = 1,
+    at = seq.POSIXt(
+      from = xmin,
+      to = xmax,
+      by = "months"
+    ),
+    format = "%Y %b"
+  )
+  
+  # Render the legend with the site colors
+  
+  legend(
+    x = "left",
+    bty = "n",
+    legend = metaEnv$sites,
+    pch = 1,
+    col = 1:length(metaEnv$sites),
+    title = "Site ID"
+  )
+
+# Close the device to write the PDF file
+  
+dev <- dev.off();
+
+```
+
+Visualization written to `r sprintf("%s/%s_vis.pdf", productPath, metaEnv$tableSummaryMetrics.name) `
 
 ## Write metdata object
 

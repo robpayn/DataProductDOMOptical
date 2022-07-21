@@ -846,6 +846,7 @@ write.table(
 
 otherNames <- c(
   sprintf("%s_matrices.zip", metaEnv$tableEEMSFiles.name),
+  sprintf("%s_vis.pdf", metaEnv$tableSummaryMetrics.name),
   "01_input.zip",
   "02_protocol.zip",
   "03_incremental.zip"
@@ -862,6 +863,7 @@ otherDescs <- c(
     ),
     metaEnv$tableEEMSFiles.name
   ),
+  "Visualization of the absorbance and fluorescence summary metrics over time.",
   paste(
     "Compressed data pipeline folder containing project default metadata.",
     "See methods for details."
@@ -1110,7 +1112,7 @@ Output from the call to EMLassemblyline::make_eml:
 
 ```{r}
 
-package.id <- "edi.410.7"
+package.id <- "edi.410.8"
 
 emlFilePath <- sprintf(
   "./04_product/%s.xml",
