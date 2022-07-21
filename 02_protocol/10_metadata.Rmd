@@ -19,6 +19,7 @@ rm(list = ls());
 # Load the tidyr package for use of the pipe operator
 
 library(tidyr)
+library(EMLassemblyline)
 
 ```
 
@@ -28,7 +29,7 @@ Generated from R markdown file **./02_protocol/`r knitr::current_input()`**, las
 
 ```{r}
 
-emlalPath <- "./03_incremental/Temp/EML";
+emlalPath <- "./03_incremental/.temp/EML";
 
 # Delete the EML directory to make sure residual files do not hide bugs
 
@@ -47,7 +48,7 @@ dir.create(
 
 # Load the incremental metadata from data processing
 
-metaEnv <- readRDS(file = "./03_incremental/temp/metadata.RData");
+metaEnv <- readRDS(file = "./03_incremental/.temp/metadata.RData");
 metadataNarrative <- readRDS(file = "./03_incremental/meta/metadata_narrative.RData");
 metadataPeople <- readRDS(file = "./03_incremental/meta/metadata_people.RData");
 
@@ -593,7 +594,7 @@ tableDescs <- character(length = 0);
 ```
 
 
-```{r}
+```{r TableEEMSFiles}
 
 tableName <- metaEnv$tableEEMSFiles.name;
 tableNames[length(tableNames) + 1] <- sprintf("%s.csv", tableName);
@@ -653,7 +654,7 @@ write.table(
 ```
 
 
-```{r}
+```{r TableEEMSColumns}
 
 tableName <- metaEnv$tableEEMSCols.name;
 tableNames[length(tableNames) + 1] <- sprintf("%s.csv", tableName);
@@ -687,7 +688,7 @@ tableAtt(
 ```
 
 
-```{r}
+```{r TableEEMSRows}
 
 tableName <- metaEnv$tableEEMSRows.name;
 tableNames[length(tableNames) + 1] <- sprintf("%s.csv", tableName);
@@ -721,7 +722,7 @@ tableAtt(
 ```
 
 
-```{r}
+```{r TableAbsorbance}
 
 tableName <- metaEnv$tableAbsorbance.name;
 tableNames[length(tableNames) + 1] <- sprintf("%s.csv", tableName);
@@ -781,7 +782,7 @@ write.table(
 ```
 
 
-```{r}
+```{r TableSummaryMetrics}
 
 tableName <- metaEnv$tableSummaryMetrics.name;
 tableNames[length(tableNames) + 1] <- sprintf("%s.csv", tableName);
@@ -977,7 +978,7 @@ exclusions <- c(
   "./02_protocol/temp/*", 
   "./02_protocol/.temp/*",
   "./02_protocol/.Rproj.user/*",
-  "./02_protocol/.Rhistory/*"
+  "./02_protocol/.Rhistory"
 )
 
 if (length(exclusions) > 0) {
@@ -1117,7 +1118,7 @@ emlFilePath <- sprintf(
 );
 
 makeEML <- function() {
-  EMLassemblyline::make_eml(
+  make_eml(
     path = emlalPath,
     data.path = "./04_product",
     eml.path = "./04_product", 
