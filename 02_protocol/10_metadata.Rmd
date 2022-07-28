@@ -123,6 +123,7 @@ names(creators) <- c(
 personnel <- creators;
 
 creators <- creators[names(creators) != "role"];
+creators[is.na(creators)] <- "";
 names(creators) <- c(
   "First Name",
   "Middle Initial",
@@ -166,6 +167,7 @@ names(contact) <- c(
 personnel <- rbind(personnel, contact);
 
 contact <- contact[names(contact) != "role"];
+contact[is.na(contact)] <- ""
 names(contact) <- c(
   "First Name",
   "Middle Initial",
@@ -218,6 +220,7 @@ names(others) <- c(
 
 personnel <- rbind(personnel, others);
 
+others[is.na(others)] <- ""
 names(others) <- c(
   "First Name",
   "Middle Initial",
@@ -264,11 +267,12 @@ keywords <- rbind.data.frame(
   list(keyword = "Montana", keywordThesaurus = ""),
   list(keyword = "Northwestern United States", keywordThesaurus = ""),
   list(keyword = "Northwestern Forested Mountains Ecoregion", keywordThesaurus = ""),
-  list(keyword = "fluorescence excitation-emission matrix", keywordThesaurus = ""),
+  list(keyword = "excitation-emission matrix", keywordThesaurus = ""),
   list(keyword = "river water", keywordThesaurus = "NALT"),
   list(keyword = "dissolved organic carbon", keywordThesaurus = "LTER Controlled Vocabulary"),
   list(keyword = "fluorescence", keywordThesaurus = "NALT"),
-  list(keyword = "absorbance", keywordThesaurus = "NALT")
+  list(keyword = "absorbance", keywordThesaurus = "NALT"),
+  list(keyword = "spectroscopy", keywordThesaurus = "NALT")
 );
 
 # Function to generate a markdown character string with
@@ -361,6 +365,7 @@ personnel$fundingNumber <- NA;
 personnel <- rbind(personnel, funding);
 
 funding <- funding[names(funding) != "role"];
+funding[is.na(funding)] <- ""
 names(funding) <- c(
   "First Name",
   "Middle Initial",
@@ -418,7 +423,10 @@ maintenance.description <- "Completed: Updates to these data are not expected"
 sitesIn <- readxl::read_excel(
   path = "./01_input/meta/2021 Site Table.xlsx",
   sheet = "Table 1",
-  range = readxl::cell_limits(ul = c(4, 2)),
+  range = readxl::cell_limits(
+    ul = c(4, 2),
+    lr = c(NA, 11)
+  ),
   col_names = TRUE,
   col_types = c(
     rep("text", times = 4),
@@ -594,6 +602,8 @@ tableDescs <- character(length = 0);
 ```
 
 
+## Data tables
+
 ```{r TableEEMSFiles}
 
 tableName <- metaEnv$tableEEMSFiles.name;
@@ -602,7 +612,7 @@ tableDescs[length(tableDescs) + 1] <- metaEnv$tableEEMSFiles.desc;
 
 ```
 
-#### **Table name:** `r tableNames[length(tableNames)]`
+### *Table name: `r tableNames[length(tableNames)]`*
 
 * **Description:** `r tableDescs[length(tableDescs)]`
 * **Table of attribute metadata:**
@@ -662,7 +672,7 @@ tableDescs[length(tableDescs) + 1] <- metaEnv$tableEEMSCols.desc;
 
 ```
 
-#### **Table name:** `r tableNames[length(tableNames)]`
+### *Table name: `r tableNames[length(tableNames)]`*
 
 * **Description:** `r tableDescs[length(tableDescs)]`
 * **Table of attribute metadata:**
@@ -696,7 +706,7 @@ tableDescs[length(tableDescs) + 1] <- metaEnv$tableEEMSRows.desc;
 
 ```
 
-#### **Table name:** `r tableNames[length(tableNames)]`
+### *Table name: `r tableNames[length(tableNames)]`*
 
 * **Description:** `r tableDescs[length(tableDescs)]`
 * **Table of attribute metadata:**
@@ -730,7 +740,7 @@ tableDescs[length(tableDescs) + 1] <- metaEnv$tableAbsorbance.desc;
 
 ```
 
-#### **Table name:** `r tableNames[length(tableNames)]`
+### *Table name: `r tableNames[length(tableNames)]`*
 
 * **Description:** `r tableDescs[length(tableDescs)]`
 * **Table of attribute metadata:**
@@ -790,7 +800,7 @@ tableDescs[length(tableDescs) + 1] <- metaEnv$tableSummaryMetrics.desc;
 
 ```
 
-#### **Table name:** `r tableNames[length(tableNames)]`
+### *Table name: `r tableNames[length(tableNames)]`*
 
 * **Description:** `r tableDescs[length(tableDescs)]`
 * **Table of attribute metadata:**
@@ -842,6 +852,8 @@ write.table(
 ```
 
 
+## Other data entities
+
 ```{r results = 'asis'}
 
 otherNames <- c(
@@ -882,8 +894,9 @@ otherDescs <- c(
 
 cat(
   paste(
-    "\n\n#### **Other file name:** ", 
-    otherNames, 
+    "\n\n### *File name:", 
+    otherNames,
+    "*",
     "\n\n* **Description:**", 
     otherDescs
   )
@@ -924,7 +937,7 @@ customZip <- function (
 
 Create the pipeline zip files. Warnings with status 12 are normal if the zip file already exists and no files need to be freshened.
 
-### 01_input.zip
+## 01_input.zip
 
 ```{r results = "asis"}
 
@@ -972,7 +985,7 @@ if (length(output) > 0) {
 
 ```
 
-### 02_protocol.zip:
+## 02_protocol.zip:
 
 ```{r results = "asis"}
 
@@ -1022,7 +1035,7 @@ if (length(output) > 0) {
 
 ```
 
-### 03_incremental.zip:
+## 03_incremental.zip:
 
 ```{r results = "asis"}
 
@@ -1112,7 +1125,7 @@ Output from the call to EMLassemblyline::make_eml:
 
 ```{r}
 
-package.id <- "edi.410.8"
+package.id <- "edi.410.10"
 
 emlFilePath <- sprintf(
   "./04_product/%s.xml",

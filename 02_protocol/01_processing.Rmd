@@ -137,7 +137,8 @@ eemsTable <- data.frame(
   eemsNamesMatrix[2,],
   eemsNamesMatrix[3,],
   sprintf(
-    "EEMS_wy2018_Aqualog.zip/%s",
+    "%s_matrices.zip/%s",
+    metaEnv$tableEEMSFiles.name,
     eemsFilenames
   )
 );
