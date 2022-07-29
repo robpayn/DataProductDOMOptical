@@ -1125,7 +1125,7 @@ Output from the call to EMLassemblyline::make_eml:
 
 ```{r}
 
-package.id <- "edi.410.10"
+package.id <- "edi.1182.1"
 
 emlFilePath <- sprintf(
   "./04_product/%s.xml",
